@@ -50,29 +50,46 @@ public class RouteService {
 
 	private Route identifyRoute(String bagId) {
 		Route route = new Route();
+
 		Bag bag = BagDAO.bagData.get(bagId);
-		Destination destination = DestinationDAO.destinationData.get(bag
-				.getSourceGate());
+
 		Flight flight = FlightDAO.flightData.get(bag.getFlightId());
 
 		route.setBagId(bagId);
-		route.setConveyorRoute(getConveyorRoute(destination,
-				bag.getSourceGate(), flight.getDepartureGate()));
-		route.setTravelTime(getTravelTime(destination,
-				bag.getSourceGate(), flight.getDepartureGate()));
+		getCompleteAndTravelTime(route, bag.getSourceGate(),
+				flight.getDepartureGate());
 		return route;
 	}
 
-	private int getTravelTime(Destination destination, String sourceGate,
-			String departureGate) {
+	private void getCompleteAndTravelTime(Route route, String sourceGate, String departureGate) {
 		// TODO Auto-generated method stub
-		return 0;
+		boolean routeCompleted = false;
+		short totalTime = 0;
+		ArrayList<String> routeStore = new ArrayList<String>();
+		StringBuilder completeRoute = new StringBuilder() ;
+		routeStore.add(departureGate);
+		
+		do {
+			Destination destination1 = DestinationDAO.destinationData
+					.get(departureGate);
+			totalTime = (short) (totalTime + destination1.getMins());
+			departureGate = destination1.getSourceGate();
+			routeStore.add(departureGate);
+			if (sourceGate.equalsIgnoreCase(departureGate)) {
+				routeCompleted = true;
+			}
+		} while (!routeCompleted);	
+		
+		for(int counter = routeStore.size() - 1; counter > 0 ; counter--){
+			completeRoute.append(routeStore.get(counter));
+			completeRoute.append(" -> ");
+		}
+		
+		completeRoute.append(routeStore.get(0));
+		
+		route.setConveyorRoute(completeRoute.toString());
+		route.setTravelTime(totalTime);
+
 	}
 
-	private String getConveyorRoute(Destination destination,
-			String sourceGate, String departureGate) {
-		return departureGate;
-		// TODO Auto-generated method stub
-
-	}
 }
